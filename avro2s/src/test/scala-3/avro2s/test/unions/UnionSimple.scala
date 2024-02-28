@@ -25,14 +25,12 @@ case class UnionSimple(var moo: String | Long | Boolean | Map[String, Double | I
               kvp._2 match {
                 case x: Double => x.asInstanceOf[AnyRef]
                 case x: Int => x.asInstanceOf[AnyRef]
-                case _ => throw new AvroRuntimeException("Invalid value")
               }
             }
             map.put(key, value)
           }
           map
         case null => null.asInstanceOf[AnyRef]
-        case _ => throw new AvroRuntimeException("Invalid value")
       }
       case _ => new org.apache.avro.AvroRuntimeException("Bad index")
     }
@@ -52,13 +50,11 @@ case class UnionSimple(var moo: String | Long | Boolean | Map[String, Double | I
               value match {
                 case x: Double => x
                 case x: Int => x
-                case _ => throw new AvroRuntimeException("Invalid value")
               }
             })
           }
         }
         case null => this.moo = null
-        case _ => throw new AvroRuntimeException("Invalid value")
       }
     }
   }

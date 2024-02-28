@@ -95,7 +95,6 @@ class CodeGeneratorTest extends AnyFunSuite with Matchers {
   private def testResult(gc: GeneratedCode, expected: String): Unit = {
     val generated = gc.code.split("\n").map(_.replaceAll("\\s*$", "")).mkString("", "\n", "\n").replaceAll("(?m)\n\n+", "\n\n")
     if (generated != expected) println(s"${gc.path}\n>$generated<\n\n")
-    generated.length shouldBe expected.length
     generated shouldBe expected
   }
 }

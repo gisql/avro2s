@@ -40,7 +40,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
             kvp._2 match {
               case x: String => x.asInstanceOf[AnyRef]
               case x: Int => x.asInstanceOf[AnyRef]
-              case _ => throw new AvroRuntimeException("Invalid value")
             }
           }
           map.put(key, value)
@@ -71,7 +70,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                           case x: Boolean => x.asInstanceOf[AnyRef]
                           case x: Double => x.asInstanceOf[AnyRef]
                           case null => null.asInstanceOf[AnyRef]
-                          case _ => throw new AvroRuntimeException("Invalid value")
                         }
                       }
                       map.put(key, value)
@@ -82,7 +80,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                 }
                 map
               case null => null.asInstanceOf[AnyRef]
-              case _ => throw new AvroRuntimeException("Invalid value")
             }
           }
           map.put(key, value)
@@ -142,7 +139,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                   case x: Boolean => x.asInstanceOf[AnyRef]
                   case x: Double => x.asInstanceOf[AnyRef]
                   case null => null.asInstanceOf[AnyRef]
-                  case _ => throw new AvroRuntimeException("Invalid value")
                 }
               }
               map.put(key, value)
@@ -336,7 +332,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                 value match {
                   case x: org.apache.avro.util.Utf8 => x.toString
                   case x: Int => x
-                  case _ => throw new AvroRuntimeException("Invalid value")
                 }
               })
             }
@@ -371,7 +366,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                                   case x: Boolean => x
                                   case x: Double => x
                                   case null => null
-                                  case _ => throw new AvroRuntimeException("Invalid value")
                                 }
                               })
                             }
@@ -380,7 +374,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                       })
                     }
                   case null => null
-                  case _ => throw new AvroRuntimeException("Invalid value")
                 }
               })
             }
@@ -452,7 +445,6 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                           case x: Boolean => x
                           case x: Double => x
                           case null => null
-                          case _ => throw new AvroRuntimeException("Invalid value")
                         }
                       })
                     }

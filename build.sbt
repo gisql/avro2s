@@ -73,6 +73,7 @@ lazy val avro2s = (project in file("avro2s"))
         Seq()
       }
     ),
+    scalacOptions += "-Werror"
   )
 
 lazy val versions = new {

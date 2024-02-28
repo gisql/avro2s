@@ -48,7 +48,6 @@ case class AvroSpec(var _null: scala.Null, var _boolean: Boolean, var _int: Int,
       case 12 => _union_other match {
         case x: String => x.asInstanceOf[AnyRef]
         case x: Int => x.asInstanceOf[AnyRef]
-        case _ => throw new AvroRuntimeException("Invalid value")
       }
       case 13 => _fixed.asInstanceOf[AnyRef]
       case _ => new org.apache.avro.AvroRuntimeException("Bad index")
@@ -99,7 +98,6 @@ case class AvroSpec(var _null: scala.Null, var _boolean: Boolean, var _int: Int,
       case 12 => value match {
         case x: org.apache.avro.util.Utf8 => this._union_other = x.toString
         case x: Int => this._union_other = x
-        case _ => throw new AvroRuntimeException("Invalid value")
       }
       case 13 => this._fixed = value.asInstanceOf[avro2s.test.spec.md5]
     }

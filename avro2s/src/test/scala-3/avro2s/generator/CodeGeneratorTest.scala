@@ -113,7 +113,6 @@ class CodeGeneratorTest extends AnyFunSuite with Matchers {
   private def testResult(gc: GeneratedCode, expected: String): Unit = {
     val generated = gc.code.replaceAll("\\s*$", "")
     if (generated != expected) println(s"${gc.path}\n$generated\n\n")
-    generated.length shouldBe expected.length
     generated shouldBe expected
   }
 }

@@ -205,7 +205,7 @@ private[avro2s] object PutCaseGenerator {
                 case _ => s"case x: $typeName => this.$fieldName = x"
               }
           }
-        } :+ "case _ => throw new AvroRuntimeException(\"Invalid value\")"
+        }
       }.mkString("\n"))
       case OptionRepresentation(schema) =>
         printer
@@ -246,7 +246,7 @@ private[avro2s] object PutCaseGenerator {
               case _ => s"case x: ${simpleTypeToScalaReceiveType(t.getType)} => x"
             }
           }
-        } :+ "case _ => throw new AvroRuntimeException(\"Invalid value\")"
+        }
       }.mkString("\n"))
       case OptionRepresentation(schema) =>
         printer.add(
