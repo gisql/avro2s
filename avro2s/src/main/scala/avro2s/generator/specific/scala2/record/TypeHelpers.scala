@@ -4,7 +4,6 @@ import avro2s.error.Error.SchemaError
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 
-import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 
 private[avro2s] object TypeHelpers {
@@ -90,15 +89,29 @@ private[avro2s] object TypeHelpers {
 
   sealed trait UnionRepresentation {
     def toString: String
+    def toTypeString: String
+    def toConstructString(value: String): String
   }
 
   object UnionRepresentation {
     final case class CoproductRepresentation(types: List[Schema]) extends UnionRepresentation {
-      override def toString: String = types.map(schemaToScalaType).mkString(" :+: ") + " :+: CNil"
+      lazy val noNulls: List[Schema] = types.filterNot(_.getType == NULL)
+      lazy val hasNull: Boolean = types.sizeCompare(noNulls) != 0
+      private lazy val innerTypeStr: String = noNulls.map(schemaToScalaType).mkString("", " :+: ", " :+: CNil")
+
+      override lazy val toString: String = if (hasNull) "Option[" + innerTypeStr + "]" else innerTypeStr
+
+      override def toTypeString: String = toString
+
+      override def toConstructString(value: String): String =
+        if (hasNull) s"Option(Coproduct[$innerTypeStr]($value))"
+        else s"Coproduct[$innerTypeStr]($value)"
     }
 
     final case class OptionRepresentation(`type`: Schema) extends UnionRepresentation {
       override def toString: String = s"Option[${schemaToScalaType(`type`)}]"
+      override def toTypeString: String = toString
+      override def toConstructString(value: String): String = s"Some($value)"
     }
   }
 }

@@ -3,7 +3,7 @@ package avro2s.generator.specific.scala2.record
 import avro2s.generator.FunctionalPrinter
 import avro2s.generator.specific.scala2.FieldOps._
 import avro2s.generator.specific.scala2.record.TypeHelpers.UnionRepresentation.{CoproductRepresentation, OptionRepresentation}
-import avro2s.generator.specific.scala2.record.TypeHelpers.{UnionRepresentation, schemas, toStringConverter, unionSchemasToType}
+import avro2s.generator.specific.scala2.record.TypeHelpers.{UnionRepresentation, schemas, unionSchemasToType}
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 
@@ -182,11 +182,19 @@ private[avro2s] object GetCaseGenerator {
     }
 
     union match {
-      case CoproductRepresentation(types) => printer.add({
-        types.zipWithIndex.map { t =>
-          s"case ${pattern(t._2 + 1, "", "")} => ${x(t._1)}"
-        } :+ "case _ => throw new AvroRuntimeException(\"Invalid value\")"
-      }.mkString("\n"))
+      case cr: CoproductRepresentation =>
+        val rawTypes = (cr.noNulls.zipWithIndex.map {
+          case (schema, idx) => s"case ${pattern(idx + 1, "", "")} => ${x(schema)}"
+        } :+ "case _ => throw new AvroRuntimeException(\"Invalid value\")").mkString("\n")
+        if (cr.hasNull) {
+          printer.add(
+              s"""case None => null
+                 |case Some(x) => x match {""".stripMargin)
+            .addIndented(rawTypes)
+            .add("}")
+        } else {
+          printer.add(rawTypes)
+        }
       case OptionRepresentation(schema) =>
         printer.add(
           s"""case None => null

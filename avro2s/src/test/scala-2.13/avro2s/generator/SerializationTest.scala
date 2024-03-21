@@ -40,21 +40,21 @@ class SerializationTest extends AnyFunSuite with Matchers {
 
   test("maps can be serialized and deserialized") {
     type Union1 = String :+: Int :+: CNil
-    type Union2 = String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil
-    type Union3 = String :+: Long :+: Boolean :+: Map[String, Map[String, Union2]] :+: scala.Null :+: CNil
-    type Union4 = MapRecord :+: Int :+: scala.Null :+: CNil
+    type Union2 = String :+: Long :+: Boolean :+: Double :+: CNil
+    type Union3 = String :+: Long :+: Boolean :+: Map[String, Map[String, Option[Union2]]] :+: CNil
+    type Union4 = MapRecord :+: Int :+: CNil
 
     val maps = Maps(
       _map_of_maps = Map("a" -> Map("b" -> "c", "d" -> "e"), "f" -> Map("g" -> "h", "i" -> "j")),
       _map_of_union = Map("a" -> Coproduct[Union1]("b"), "c" -> Coproduct[Union1](1)),
       _map_of_union_of_map_of_union = Map(
-        "a" -> Coproduct[Union3]("b"),
-        "c" -> Coproduct[Union3](1L),
-        "d" -> Coproduct[Union3](true),
-        "e" -> Coproduct[Union3](Map("f" -> Map("g" -> Coproduct[Union2]("h"), "i" -> Coproduct[Union2](1L), "j" -> Coproduct[Union2](true), "k" -> Coproduct[Union2](1.0), "l" -> Coproduct[Union2](null))))
+        "a" -> Some(Coproduct[Union3]("b")),
+        "c" -> Some(Coproduct[Union3](1L)),
+        "d" -> Some(Coproduct[Union3](true)),
+        "e" -> Some(Coproduct[Union3](Map("f" -> Map("g" -> Some(Coproduct[Union2]("h")), "i" -> Some(Coproduct[Union2](1L)), "j" -> Some(Coproduct[Union2](true)), "k" -> Some(Coproduct[Union2](1.0)), "l" -> None))))
       ),
       _map_of_map_of_union = Map(
-        "a" -> Map("b" -> Coproduct[Union2]("c"), "d" -> Coproduct[Union2](1L), "e" -> Coproduct[Union2](true), "f" -> Coproduct[Union2](1.0), "g" -> Coproduct[Union2](null)),
+        "a" -> Map("b" -> Some(Coproduct[Union2]("c")), "d" -> Some(Coproduct[Union2](1L)), "e" -> Some(Coproduct[Union2](true)), "f" -> Some(Coproduct[Union2](1.0)), "g" -> None),
       ),
       _map_of_arrays_of_maps = Map(
         "a" -> List(Map("b" -> false), Map("c" -> true)),
@@ -79,9 +79,9 @@ class SerializationTest extends AnyFunSuite with Matchers {
         "b" -> MapRecord(a = "c"),
       ),
       _map_of_union_of_record = Map(
-        "a" -> Coproduct[Union4](MapRecord(a = "b")),
-        "b" -> Coproduct[Union4](1),
-        "c" -> Coproduct[Union4](null),
+        "a" -> Some(Coproduct[Union4](MapRecord(a = "b"))),
+        "b" -> Some(Coproduct[Union4](1)),
+        "c" -> None,
       ),
       _map_of_bytes = Map(
         "a" -> Array[Byte](0x6f, 0x6e),
@@ -121,35 +121,35 @@ class SerializationTest extends AnyFunSuite with Matchers {
   }
 
   test("unions can be serialized and deserialized") {
-    type Union1 = String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil
-    type Union2 = String :+: Long :+: Boolean :+: Map[String, Map[String, Union1]] :+: scala.Null :+: CNil
-    type Union3 = String :+: Long :+: Boolean :+: Map[String, Option[String]] :+: scala.Null :+: CNil
-    type Union4 = String :+: Long :+: Boolean :+: List[Option[String]] :+: scala.Null :+: CNil
-    type Union5 = String :+: Long :+: Boolean :+: List[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil] :+: scala.Null :+: CNil
-    type Union6 = String :+: Long :+: Boolean :+: List[List[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil
-    type Union7 = String :+: Long :+: Boolean :+: avro2s.test.unions.Record1 :+: avro2s.test.unions.Record2 :+: scala.Null :+: CNil
-    type Union8 = String :+: Long :+: Boolean :+: avro2s.test.unions.Enum1 :+: scala.Null :+: CNil
-    type Union9 = String :+: Long :+: Boolean :+: avro2s.test.unions.Fixed1 :+: scala.Null :+: CNil
-    type Union10 = String :+: Long :+: scala.Null :+: CNil
+    type Union1 = String :+: Long :+: Boolean :+: Double :+: CNil
+    type Union2 = String :+: Long :+: Boolean :+: Map[String, Map[String, Option[Union1]]] :+: CNil
+    type Union3 = String :+: Long :+: Boolean :+: Map[String, Option[String]] :+: CNil
+    type Union4 = String :+: Long :+: Boolean :+: List[Option[String]] :+: CNil
+    type Union5 = String :+: Long :+: Boolean :+: List[Option[String :+: Long :+: Boolean :+: Double :+: CNil]] :+: CNil
+    type Union6 = String :+: Long :+: Boolean :+: List[List[Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil
+    type Union7 = String :+: Long :+: Boolean :+: avro2s.test.unions.Record1 :+: avro2s.test.unions.Record2 :+: CNil
+    type Union8 = String :+: Long :+: Boolean :+: avro2s.test.unions.Enum1 :+: CNil
+    type Union9 = String :+: Long :+: Boolean :+: avro2s.test.unions.Fixed1 :+: CNil
+    type Union10 = String :+: Long :+: CNil
     type Union11 = Int :+: String :+: CNil
     type Union12 = Long :+: String :+: CNil
     type Union13 = Float :+: String :+: CNil
     type Union14 = Double :+: String :+: CNil
     type Union15 = Boolean :+: String :+: CNil
     type Union16 = Array[Byte] :+: String :+: CNil
-    type Union17 = String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil
+    type Union17 = String :+: Long :+: Boolean :+: Double :+: CNil
 
 
     val unions = Unions(
-      _union_of_map_of_union = Coproduct[Union2](Map("a" -> Map("b" -> Coproduct[Union1]("c"), "d" -> Coproduct[Union1](1L), "e" -> Coproduct[Union1](true), "f" -> Coproduct[Union1](1.0), "g" -> Coproduct[Union1](null)))),
-      _union_of_map_of_option = Coproduct[Union3](Map("a" -> Some("b"), "c" -> None)),
-      _union_of_array_of_option = Coproduct[Union4](List(Some("a"), None)),
-      _union_of_array_of_union = Coproduct[Union5](List(Coproduct[Union1]("a"), Coproduct[Union1](1L), Coproduct[Union1](true), Coproduct[Union1](1.0), Coproduct[Union1](null))),
-      _union_of_array_of_array = Coproduct[Union6](List(List(Coproduct[Union1]("a"), Coproduct[Union1](1L), Coproduct[Union1](true), Coproduct[Union1](1.0), Coproduct[Union1](null)), List(Coproduct[Union1]("b"), Coproduct[Union1](2L), Coproduct[Union1](false), Coproduct[Union1](2.0), Coproduct[Union1](null)))),
-      _union_of_records = Coproduct[Union7](avro2s.test.unions.Record1(field1 = "a")),
-      _union_of_enum = Coproduct[Union8](avro2s.test.unions.Enum1.sym2),
-      _union_of_fixed = Coproduct[Union9](avro2s.test.unions.Fixed1(Array[Byte](0x6f))),
-      _union_of_string = Coproduct[Union10]("a"),
+      _union_of_map_of_union = Some(Coproduct[Union2](Map("a" -> Map("b" -> Some(Coproduct[Union1]("c")), "d" -> Some(Coproduct[Union1](1L)), "e" -> Some(Coproduct[Union1](true)), "f" -> Some(Coproduct[Union1](1.0)), "g" -> None)))),
+      _union_of_map_of_option = Some(Coproduct[Union3](Map("a" -> Some("b"), "c" -> None))),
+      _union_of_array_of_option = Some(Coproduct[Union4](List(Some("a"), None))),
+      _union_of_array_of_union = Some(Coproduct[Union5](List(Some(Coproduct[Union1]("a")), Some(Coproduct[Union1](1L)), Some(Coproduct[Union1](true)), Some(Coproduct[Union1](1.0)), None))),
+      _union_of_array_of_array = Some(Coproduct[Union6](List(List(Some(Coproduct[Union1]("a")), Some(Coproduct[Union1](1L)), Some(Coproduct[Union1](true)), Some(Coproduct[Union1](1.0)), None), List(Some(Coproduct[Union1]("b")), Some(Coproduct[Union1](2L)), Some(Coproduct[Union1](false)), Some(Coproduct[Union1](2.0)), None)))),
+      _union_of_records = Some(Coproduct[Union7](avro2s.test.unions.Record1(field1 = "a"))),
+      _union_of_enum = Some(Coproduct[Union8](avro2s.test.unions.Enum1.sym2)),
+      _union_of_fixed = Some(Coproduct[Union9](avro2s.test.unions.Fixed1(Array[Byte](0x6f)))),
+      _union_of_string = Some(Coproduct[Union10]("a")),
       _union_of_int = Coproduct[Union11](1),
       _union_of_long = Coproduct[Union12](1L),
       _union_of_float = Coproduct[Union13](1.0f),
@@ -172,8 +172,8 @@ class SerializationTest extends AnyFunSuite with Matchers {
       _optional_array_of_map = Option(List(Map("a" -> "b", "c" -> "d"), Map("e" -> "f", "g" -> "h"))),
       _optional_map_of_map = Option(Map("a" -> Map("b" -> "c", "d" -> "e"), "f" -> Map("g" -> "h", "i" -> "j"))),
       _optional_array_of_array = Option(List(List("a", "b", "c"), List("d", "e", "f"))),
-      _optional_map_of_union = Option(Map("a" -> Coproduct[Union17]("b"), "c" -> Coproduct[Union17](1L), "d" -> Coproduct[Union17](true), "e" -> Coproduct[Union17](1.0), "f" -> Coproduct[Union17](null))),
-      _optional_array_of_union = Option(List(Coproduct[Union17]("a"), Coproduct[Union17](1L), Coproduct[Union17](true), Coproduct[Union17](1.0), Coproduct[Union17](null))),
+      _optional_map_of_union = Option(Map("a" -> Some(Coproduct[Union17]("b")), "c" -> Some(Coproduct[Union17](1L)), "d" -> Some(Coproduct[Union17](true)), "e" -> Some(Coproduct[Union17](1.0)), "f" -> None)),
+      _optional_array_of_union = Option(List(Some(Coproduct[Union17]("a")), Some(Coproduct[Union17](1L)), Some(Coproduct[Union17](true)), Some(Coproduct[Union17](1.0)), None)),
     )
 
     deserialize[Unions](serialize(unions), unions.getSchema) shouldBe unions
@@ -201,7 +201,7 @@ class SerializationTest extends AnyFunSuite with Matchers {
 
     deserialize[AvroSpec](serialize(spec), spec.getSchema) shouldBe spec
   }
-  
+
   test("reserved can be serialized and deserialized") {
     val reserved = avro2s.test.reserved.Reserved(
       `abstract` = null,
@@ -248,10 +248,11 @@ class SerializationTest extends AnyFunSuite with Matchers {
 
     deserialize[avro2s.test.reserved.Reserved](serialize(reserved), reserved.getSchema) shouldBe reserved
   }
-  
+
   test("options with null as second type can be serialized and deserialized") {
     val optionsWithNullAsSecondType = avro2s.test.unions.OptionsWithNullAsSecondType(
       _simple = Some("a"),
+      _double = Some(Coproduct[String :+: Double :+: CNil]("b")),
       _optional_array = Some(List(true, false, true)),
       _array_of_options = List(Some("a"), None),
       _map_of_options = Map("a" -> Some("b"), "c" -> None)

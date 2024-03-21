@@ -86,12 +86,12 @@ private[avro2s] object SpecificRecordGenerator {
       case RECORD | FIXED => s"new ${schema.getFullName}()"
       case ARRAY => "List.empty"
       case MAP => "Map.empty"
-      case UNION if !schema.getTypes.asScala.toList.exists(_.getType == NULL) || schema.getTypes.size() > 2 =>
+      case UNION if !schema.getTypes.asScala.toList.exists(_.getType == NULL) =>
         s"Inl(${defaultForSchema(schema.getTypes.asScala.toList.head)})"
       case UNION => "None"
       case _ => "null"
     }
-    
+
     s"def this() = this(${
       fields.map { f =>
         defaultForSchema(f.schema())

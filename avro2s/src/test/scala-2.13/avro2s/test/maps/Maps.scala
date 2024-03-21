@@ -7,7 +7,7 @@ import org.apache.avro.AvroRuntimeException
 import scala.annotation.switch
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr}
 
-case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_union: Map[String, String :+: Int :+: CNil], var _map_of_union_of_map_of_union: Map[String, String :+: Long :+: Boolean :+: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil], var _map_of_arrays: Map[String, List[String]], var _map_of_arrays_of_maps: Map[String, List[Map[String, Boolean]]], var _map_of_map_of_union: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]], var _map_of_map_of_arrays: Map[String, Map[String, List[String]]], var _map_of_fixed: Map[String, avro2s.test.maps.Fixed], var _map_of_enum: Map[String, avro2s.test.maps.Enum], var _map_of_record: Map[String, avro2s.test.maps.Record], var _map_of_union_of_record: Map[String, avro2s.test.maps.Record :+: Int :+: scala.Null :+: CNil], var _map_of_bytes: Map[String, Array[Byte]], var _map_of_string: Map[String, String], var _map_of_int: Map[String, Int], var _map_of_long: Map[String, Long], var _map_of_float: Map[String, Float], var _map_of_double: Map[String, Double], var _map_of_boolean: Map[String, Boolean], var _map_of_null: Map[String, scala.Null]) extends org.apache.avro.specific.SpecificRecordBase {
+case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_union: Map[String, String :+: Int :+: CNil], var _map_of_union_of_map_of_union: Map[String, Option[String :+: Long :+: Boolean :+: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil]], var _map_of_arrays: Map[String, List[String]], var _map_of_arrays_of_maps: Map[String, List[Map[String, Boolean]]], var _map_of_map_of_union: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]], var _map_of_map_of_arrays: Map[String, Map[String, List[String]]], var _map_of_fixed: Map[String, avro2s.test.maps.Fixed], var _map_of_enum: Map[String, avro2s.test.maps.Enum], var _map_of_record: Map[String, avro2s.test.maps.Record], var _map_of_union_of_record: Map[String, Option[avro2s.test.maps.Record :+: Int :+: CNil]], var _map_of_bytes: Map[String, Array[Byte]], var _map_of_string: Map[String, String], var _map_of_int: Map[String, Int], var _map_of_long: Map[String, Long], var _map_of_float: Map[String, Float], var _map_of_double: Map[String, Double], var _map_of_boolean: Map[String, Boolean], var _map_of_null: Map[String, scala.Null]) extends org.apache.avro.specific.SpecificRecordBase {
   def this() = this(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 
   override def getSchema: org.apache.avro.Schema = Maps.SCHEMA$
@@ -54,36 +54,40 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
           val key = kvp._1
           val value = {
             kvp._2 match {
-              case Inl(x) => x.asInstanceOf[AnyRef]
-              case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
-              case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
-              case Inr(Inr(Inr(Inl(x)))) =>
-                val map: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]
-                x.foreach { kvp =>
-                  val key = kvp._1
-                  val value = {
-                    val map: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]
-                    kvp._2.foreach { kvp =>
-                      val key = kvp._1
-                      val value = {
-                        kvp._2 match {
-                          case Inl(x) => x.asInstanceOf[AnyRef]
-                          case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
-                          case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
-                          case Inr(Inr(Inr(Inl(x)))) => x.asInstanceOf[AnyRef]
-                          case Inr(Inr(Inr(Inr(Inl(x))))) => x.asInstanceOf[AnyRef]
-                          case _ => throw new AvroRuntimeException("Invalid value")
+              case None => null
+              case Some(x) => x match {
+                case Inl(x) => x.asInstanceOf[AnyRef]
+                case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
+                case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
+                case Inr(Inr(Inr(Inl(x)))) =>
+                  val map: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]
+                  x.foreach { kvp =>
+                    val key = kvp._1
+                    val value = {
+                      val map: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]
+                      kvp._2.foreach { kvp =>
+                        val key = kvp._1
+                        val value = {
+                          kvp._2 match {
+                            case None => null
+                            case Some(x) => x match {
+                              case Inl(x) => x.asInstanceOf[AnyRef]
+                              case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
+                              case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
+                              case Inr(Inr(Inr(Inl(x)))) => x.asInstanceOf[AnyRef]
+                              case _ => throw new AvroRuntimeException("Invalid value")
+                            }
+                          }
                         }
+                        map.put(key, value)
                       }
-                      map.put(key, value)
+                      map
                     }
-                    map
+                    map.put(key, value)
                   }
-                  map.put(key, value)
-                }
-                map
-              case Inr(Inr(Inr(Inr(Inl(x))))) => x.asInstanceOf[AnyRef]
-              case _ => throw new AvroRuntimeException("Invalid value")
+                  map
+                case _ => throw new AvroRuntimeException("Invalid value")
+              }
             }
           }
           map.put(key, value)
@@ -138,12 +142,14 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
               val key = kvp._1
               val value = {
                 kvp._2 match {
-                  case Inl(x) => x.asInstanceOf[AnyRef]
-                  case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
-                  case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
-                  case Inr(Inr(Inr(Inl(x)))) => x.asInstanceOf[AnyRef]
-                  case Inr(Inr(Inr(Inr(Inl(x))))) => x.asInstanceOf[AnyRef]
-                  case _ => throw new AvroRuntimeException("Invalid value")
+                  case None => null
+                  case Some(x) => x match {
+                    case Inl(x) => x.asInstanceOf[AnyRef]
+                    case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
+                    case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
+                    case Inr(Inr(Inr(Inl(x)))) => x.asInstanceOf[AnyRef]
+                    case _ => throw new AvroRuntimeException("Invalid value")
+                  }
                 }
               }
               map.put(key, value)
@@ -216,10 +222,12 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
           val key = kvp._1
           val value = {
             kvp._2 match {
-              case Inl(x) => x.asInstanceOf[AnyRef]
-              case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
-              case Inr(Inr(Inl(x))) => x.asInstanceOf[AnyRef]
-              case _ => throw new AvroRuntimeException("Invalid value")
+              case None => null
+              case Some(x) => x match {
+                case Inl(x) => x.asInstanceOf[AnyRef]
+                case Inr(Inl(x)) => x.asInstanceOf[AnyRef]
+                case _ => throw new AvroRuntimeException("Invalid value")
+              }
             }
           }
           map.put(key, value)
@@ -368,11 +376,10 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
               val value = kvp._2
               (key, {
                 value match {
-                  case x: org.apache.avro.util.Utf8 => Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil](x.toString)
-                  case x: Long => Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil](x)
-                  case x: Boolean => Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil](x)
-                  case map: java.util.Map[_,_] => Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil]({
-                    scala.jdk.CollectionConverters.MapHasAsScala(map).asScala.toMap map { kvp =>
+                  case x: org.apache.avro.util.Utf8 => Option(Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil](x.toString))
+                  case x: Long => Option(Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil](x))
+                  case x: Boolean => Option(Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil](x))
+                  case map: java.util.Map[_,_] => Option(Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil](  scala.jdk.CollectionConverters.MapHasAsScala(map).asScala.toMap map { kvp =>
                       val key = kvp._1.toString
                       val value = kvp._2
                       (key, {
@@ -383,11 +390,11 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                               val value = kvp._2
                               (key, {
                                 value match {
-                                  case x: org.apache.avro.util.Utf8 => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x.toString)
-                                  case x: Long => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
-                                  case x: Boolean => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
-                                  case x: Double => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
-                                  case x @ null => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
+                                  case x: org.apache.avro.util.Utf8 => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x.toString))
+                                  case x: Long => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
+                                  case x: Boolean => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
+                                  case x: Double => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
+                                  case x @ null => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
                                   case _ => throw new AvroRuntimeException("Invalid value")
                                 }
                               })
@@ -395,9 +402,8 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                           }
                         }
                       })
-                    }
-                  })
-                  case x @ null => Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil]] :+: scala.Null :+: CNil](x)
+                    }))
+                  case x @ null => Option(Coproduct[String :+: Long :+: Boolean :+: Map[String, Map[String, Option[String :+: Long :+: Boolean :+: Double :+: CNil]]] :+: CNil](x))
                   case _ => throw new AvroRuntimeException("Invalid value")
                 }
               })
@@ -465,11 +471,11 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
                       val value = kvp._2
                       (key, {
                         value match {
-                          case x: org.apache.avro.util.Utf8 => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x.toString)
-                          case x: Long => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
-                          case x: Boolean => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
-                          case x: Double => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
-                          case x @ null => Coproduct[String :+: Long :+: Boolean :+: Double :+: scala.Null :+: CNil](x)
+                          case x: org.apache.avro.util.Utf8 => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x.toString))
+                          case x: Long => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
+                          case x: Boolean => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
+                          case x: Double => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
+                          case x @ null => Option(Coproduct[String :+: Long :+: Boolean :+: Double :+: CNil](x))
                           case _ => throw new AvroRuntimeException("Invalid value")
                         }
                       })
@@ -556,9 +562,9 @@ case class Maps(var _map_of_maps: Map[String, Map[String, String]], var _map_of_
               val value = kvp._2
               (key, {
                 value match {
-                  case x: avro2s.test.maps.Record => Coproduct[avro2s.test.maps.Record :+: Int :+: scala.Null :+: CNil](x)
-                  case x: Int => Coproduct[avro2s.test.maps.Record :+: Int :+: scala.Null :+: CNil](x)
-                  case x @ null => Coproduct[avro2s.test.maps.Record :+: Int :+: scala.Null :+: CNil](x)
+                  case x: avro2s.test.maps.Record => Option(Coproduct[avro2s.test.maps.Record :+: Int :+: CNil](x))
+                  case x: Int => Option(Coproduct[avro2s.test.maps.Record :+: Int :+: CNil](x))
+                  case x @ null => Option(Coproduct[avro2s.test.maps.Record :+: Int :+: CNil](x))
                   case _ => throw new AvroRuntimeException("Invalid value")
                 }
               })

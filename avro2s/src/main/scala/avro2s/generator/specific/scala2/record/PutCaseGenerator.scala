@@ -1,12 +1,13 @@
 package avro2s.generator.specific.scala2.record
 
+import avro2s.generator
 import avro2s.generator.FunctionalPrinter
 import avro2s.generator.specific.scala2.FieldOps._
 import avro2s.generator.specific.scala2.record.TypeHelpers.UnionRepresentation.{CoproductRepresentation, OptionRepresentation}
-import avro2s.generator.specific.scala2.record.TypeHelpers.{UnionRepresentation, schemaToScalaType, schemas, simpleTypeToScalaReceiveType, toStringConverter, typeCast, unionSchemasToType}
+import avro2s.generator.specific.scala2.record.TypeHelpers._
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type
-import org.apache.avro.Schema.Type.{ARRAY, BYTES, ENUM, FIXED, MAP, RECORD, UNION}
+import org.apache.avro.Schema.Type._
 
 /**
  * NOTE: This features code that is not stack safe, based on the expectation that deeply nested schemas are unlikely, and that build tools
@@ -173,37 +174,23 @@ private[avro2s] object PutCaseGenerator {
 
   private def printUnionPatternMatch(printer: FunctionalPrinter, fieldName: String, union: UnionRepresentation): FunctionalPrinter = {
     union match {
-      case CoproductRepresentation(types) => printer.add({
-        types.map { t =>
-          val newPrinter = new FunctionalPrinter()
+      case cr: CoproductRepresentation => printer.add({
+        cr.types.map { t =>
           t.getType match {
             case MAP =>
-              newPrinter
-                .call(printUnionMapPatternMatch(_, fieldName, t, union))
-                .result()
+              indentedFp()(_.call(printUnionMapPatternMatch(_, fieldName, t, union)))
             case ARRAY =>
-              newPrinter
-                .add(s"case x: java.util.List[_] => this.$fieldName = Coproduct[$union]({")
-                .indent
-                .call(printArrayValueInner(_, t, Some("x")))
-                .outdent
-                .add("}.toList)")
-                .result()
+              val inner = indentedFp()(_.add("{").indent.call(printArrayValueInner(_, t, Some("x"))).outdent.add("}.toList"))
+              s"case x: java.util.List[_] => this.$fieldName = ${cr.toConstructString(inner)}"
             case BYTES =>
-              newPrinter
-                .add(s"case x: java.nio.ByteBuffer => this.$fieldName = Coproduct[$union](x.array())")
-                .result()
+              s"case x: java.nio.ByteBuffer => this.$fieldName = ${cr.toConstructString("x.array()")}"
             case RECORD | ENUM | FIXED =>
-              newPrinter
-                .add(s"case x: ${t.getFullName} => this.$fieldName = Coproduct[$union](x)")
-                .result()
+              s"case x: ${t.getFullName} => this.$fieldName = ${cr.toConstructString("x")}"
             case _ =>
               val typeName = simpleTypeToScalaReceiveType(t.getType)
               val x = if (t.getType == Type.STRING) "x.toString" else "x"
               val `case` = if (t.getType == Type.NULL) "x @ null" else s"x: $typeName"
-              newPrinter
-                .add(s"case ${`case`} => this.$fieldName = Coproduct[$union]($x)")
-                .result()
+              s"case ${`case`} => this.$fieldName = ${cr.toConstructString(x)}"
           }
         } :+ "case _ => throw new AvroRuntimeException(\"Invalid value\")"
       }.mkString("\n"))
@@ -236,15 +223,15 @@ private[avro2s] object PutCaseGenerator {
 
   private def printUnionValue(printer: FunctionalPrinter, union: UnionRepresentation): FunctionalPrinter = {
     union match {
-      case CoproductRepresentation(types) => printer.add({
-        types.map { t =>
-          if (t.getType == RECORD) s"case x: ${t.getFullName} => Coproduct[$union](x)"
+      case cr: CoproductRepresentation => printer.add({
+        cr.types.map { t =>
+          if (t.getType == RECORD) s"case x: ${t.getFullName} => ${cr.toConstructString("x")}"
           else if (t.getType == MAP) printUnionMapValue(new FunctionalPrinter(), t, union).result()
           else {
             val typeName = simpleTypeToScalaReceiveType(t.getType)
             val x = if (t.getType == Type.STRING) "x.toString" else "x"
             val `case` = if (t.getType == Type.NULL) "x @ null" else s"x: $typeName"
-            s"case ${`case`} => Coproduct[$union]($x)"
+            s"case ${`case`} => ${cr.toConstructString(x)}"
           }
         } :+ "case _ => throw new AvroRuntimeException(\"Invalid value\")"
       }.mkString("\n"))
@@ -256,23 +243,28 @@ private[avro2s] object PutCaseGenerator {
     }
   }
 
+  private def indentedFp(pattern: FunctionalPrinter = new FunctionalPrinter())(operate: FunctionalPrinter => FunctionalPrinter): String = {
+    val inner = new FunctionalPrinter()
+    inner.indent(pattern.indentLevel)
+    operate(inner).result()
+  }
+
   private def printUnionMapPatternMatch(functionalPrinter: FunctionalPrinter, fieldName: String, schema: Schema, union: UnionRepresentation): FunctionalPrinter = {
-    functionalPrinter
-      .add(s"case map: java.util.Map[_,_] => this.$fieldName = Coproduct[$union]({")
-      .indent
-      .add("scala.jdk.CollectionConverters.MapHasAsScala(map).asScala.toMap map { kvp =>")
-      .indent
-      .add("val key = kvp._1.toString")
-      .add("val value = kvp._2")
-      .add(s"(key, {")
-      .indent
-      .call(printMapValueInner(_, schema.getValueType))
-      .outdent
-      .add("})")
-      .outdent
-      .add("}")
-      .outdent
-      .add("})")
+    val value = indentedFp(functionalPrinter) {
+      _.indent
+        .add("scala.jdk.CollectionConverters.MapHasAsScala(map).asScala.toMap map { kvp =>")
+        .indent
+        .add("val key = kvp._1.toString")
+        .add("val value = kvp._2")
+        .add(s"(key, {")
+        .indent
+        .call(printMapValueInner(_, schema.getValueType))
+        .outdent
+        .add("})")
+        .outdent
+        .add("}")
+    }
+    functionalPrinter.add(s"case map: java.util.Map[_,_] => this.$fieldName = ${union.toConstructString(value)}")
   }
 
   private def printOptionMapPatternMatch(functionalPrinter: FunctionalPrinter, fieldName: String, schema: Schema, union: UnionRepresentation): FunctionalPrinter = {
@@ -295,21 +287,20 @@ private[avro2s] object PutCaseGenerator {
   }
 
   private def printUnionMapValue(functionalPrinter: FunctionalPrinter, schema: Schema, union: UnionRepresentation): FunctionalPrinter = {
-    functionalPrinter
-      .add(s"case map: java.util.Map[_,_] => Coproduct[$union]({")
-      .indent
-      .add("scala.jdk.CollectionConverters.MapHasAsScala(map).asScala.toMap map { kvp =>")
-      .indent
-      .add("val key = kvp._1.toString")
-      .add("val value = kvp._2")
-      .add(s"(key, {")
-      .indent
-      .call(printMapValueInner(_, schema.getValueType))
-      .outdent
-      .add("})")
-      .outdent
-      .add("}")
-      .outdent
-      .add("})")
+    val value = indentedFp(functionalPrinter) {
+      _.indent
+        .add("scala.jdk.CollectionConverters.MapHasAsScala(map).asScala.toMap map { kvp =>")
+        .indent
+        .add("val key = kvp._1.toString")
+        .add("val value = kvp._2")
+        .add(s"(key, {")
+        .indent
+        .call(printMapValueInner(_, schema.getValueType))
+        .outdent
+        .add("})")
+        .outdent
+        .add("}")
+    }
+    functionalPrinter.add(s"case map: java.util.Map[_,_] => ${union.toConstructString(value)}")
   }
 }

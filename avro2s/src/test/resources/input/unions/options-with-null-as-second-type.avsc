@@ -8,6 +8,10 @@
       "type": ["string", "null"]
     },
     {
+      "name": "_double",
+      "type": ["string", "null", "double"]
+    },
+    {
       "name": "_optional_array",
       "type": [{"type": "array", "items": "boolean"}, "null"]
     },
