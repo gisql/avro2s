@@ -96,7 +96,7 @@ private[avro2s] object TypeHelpers {
   object UnionRepresentation {
     final case class CoproductRepresentation(types: List[Schema]) extends UnionRepresentation {
       lazy val noNulls: List[Schema] = types.filterNot(_.getType == NULL)
-      lazy val hasNull: Boolean = types.sizeCompare(noNulls) != 0
+      lazy val hasNull: Boolean = types.exists(_.getType == NULL)
       private lazy val innerTypeStr: String = noNulls.map(schemaToScalaType).mkString("", " :+: ", " :+: CNil")
 
       override lazy val toString: String = if (hasNull) "Option[" + innerTypeStr + "]" else innerTypeStr

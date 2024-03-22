@@ -7,6 +7,7 @@ import avro2s.schema.RecordInspector
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 
+import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 
 private[avro2s] object SpecificRecordGenerator {
@@ -77,6 +78,7 @@ private[avro2s] object SpecificRecordGenerator {
   }
 
   private def toThis(fields: List[Schema.Field]): String = {
+    @tailrec
     def defaultForType(schema: Schema): String = schema.getType match {
       case INT | LONG | FLOAT | DOUBLE => "0"
       case BOOLEAN => "false"
@@ -87,7 +89,7 @@ private[avro2s] object SpecificRecordGenerator {
       case MAP => "Map.empty"
       case UNION =>
         val types = schema.getTypes.asScala.toList
-        if (!types.exists(_.getType == NULL) || types.length > 2) defaultForType(types.head)
+        if (!types.exists(_.getType == NULL)) defaultForType(types.head)
         else "None"
       case _ => "null"
     }

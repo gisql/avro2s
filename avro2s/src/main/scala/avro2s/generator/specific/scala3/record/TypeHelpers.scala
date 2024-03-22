@@ -89,15 +89,32 @@ private[avro2s] object TypeHelpers {
 
   sealed trait UnionRepresentation {
     def toString: String
+
+    def toTypeString: String
+
+    def toConstructString(value: String): String
   }
 
   object UnionRepresentation {
     final case class TypeUnionRepresentation(types: List[Schema]) extends UnionRepresentation {
-      override def toString: String = types.map(schemaToScalaType).mkString(" | ")
+      lazy val innerTypeStr: String = noNulls.map(schemaToScalaType).mkString(" | ")
+
+      lazy val noNulls: List[Schema] = types.filterNot(_.getType == NULL)
+      lazy val hasNull: Boolean = types.exists(_.getType == NULL)
+
+      override def toString: String = if (hasNull) "Option[" + innerTypeStr + "]" else innerTypeStr
+
+      override def toTypeString: String = toString
+
+      override def toConstructString(value: String): String = if (hasNull) s"Option($value)" else s"$value"
     }
 
     final case class OptionRepresentation(`type`: Schema) extends UnionRepresentation {
       override def toString: String = s"Option[${schemaToScalaType(`type`)}]"
+
+      override def toTypeString: String = toString
+
+      override def toConstructString(value: String): String = s"Some($value)"
     }
   }
 }

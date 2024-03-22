@@ -2,10 +2,12 @@
 
 package avro2s.test.unions
 
+import org.apache.avro.AvroRuntimeException
+
 import scala.annotation.switch
 
 case class OptionsWithNullAsSecondType(var _simple: Option[String], var _double: Option[String | Double], var _optional_array: Option[List[Boolean]], var _array_of_options: List[Option[String]], var _map_of_options: Map[String, Option[String]]) extends org.apache.avro.specific.SpecificRecordBase {
-  def this() = this(None, None, List.empty, Map.empty)
+  def this() = this(None, None, None, List.empty, Map.empty)
 
   override def getSchema: org.apache.avro.Schema = OptionsWithNullAsSecondType.SCHEMA$
 
@@ -16,12 +18,9 @@ case class OptionsWithNullAsSecondType(var _simple: Option[String], var _double:
         case Some(x) => x.asInstanceOf[AnyRef]
       }
       case 1 => _double match {
+        case Some(x: String) => x.asInstanceOf[AnyRef]
+        case Some(x: Double) => x.asInstanceOf[AnyRef]
         case None => null
-        case Some(x) =>
-          x match {
-            case x: String => x.asInstanceOf[AnyRef]
-            case x: Double => x.asInstanceOf[AnyRef]
-          }
       }
       case 2 => _optional_array match {
         case None => null
@@ -65,9 +64,9 @@ case class OptionsWithNullAsSecondType(var _simple: Option[String], var _double:
         case x => this._simple = Some(x.toString.asInstanceOf[String])
       }
       case 1 => value match {
+        case x: org.apache.avro.util.Utf8 => this._double = Option(x.toString)
         case null => this._double = None
-        case x: String => this._double = Some(x)
-        case x: Double => this._double = Some(x)
+        case x: Double => this._double = Option(x)
         case _ => throw new AvroRuntimeException("Invalid value")
       }
       case 2 => value match {
@@ -113,5 +112,5 @@ case class OptionsWithNullAsSecondType(var _simple: Option[String], var _double:
 }
 
 object OptionsWithNullAsSecondType {
-  val SCHEMA$: org.apache.avro.Schema = new org.apache.avro.Schema.Parser().parse("""{"type":"record","name":"OptionsWithNullAsSecondType","namespace":"avro2s.test.unions","fields":[{"name":"_simple","type":["string","null"]},{"name":"_optional_array","type":[{"type":"array","items":"boolean"},"null"]},{"name":"_array_of_options","type":{"type":"array","items":["string","null"]}},{"name":"_map_of_options","type":{"type":"map","values":["string","null"]}}]}""")
+  val SCHEMA$: org.apache.avro.Schema = new org.apache.avro.Schema.Parser().parse("""{"type":"record","name":"OptionsWithNullAsSecondType","namespace":"avro2s.test.unions","fields":[{"name":"_simple","type":["string","null"]},{"name":"_double","type":["string","null","double"]},{"name":"_optional_array","type":[{"type":"array","items":"boolean"},"null"]},{"name":"_array_of_options","type":{"type":"array","items":["string","null"]}},{"name":"_map_of_options","type":{"type":"map","values":["string","null"]}}]}""")
 }

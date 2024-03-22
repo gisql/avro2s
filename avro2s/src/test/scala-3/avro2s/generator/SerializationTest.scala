@@ -13,15 +13,15 @@ import org.scalatest.matchers.should.Matchers
 class SerializationTest extends AnyFunSuite with Matchers {
   test("unions can be serialized and deserialized") {
     val unions = Unions(
-      _union_of_map_of_union = null,
-      _union_of_map_of_option = Map("a" -> Some("b"), "c" -> None),
-      _union_of_array_of_option = List(Some("a"), None),
-      _union_of_array_of_union = null,
-      _union_of_array_of_array = null,
-      _union_of_records = avro2s.test.unions.Record1(field1 = "a"),
-      _union_of_enum = avro2s.test.unions.Enum1.sym2,
-      _union_of_fixed = 0x6f,
-      _union_of_string = "a",
+      _union_of_map_of_union = None,
+      _union_of_map_of_option = Some(Map("a" -> Some("b"), "c" -> None)),
+      _union_of_array_of_option = Some(List(Some("a"), None)),
+      _union_of_array_of_union = None,
+      _union_of_array_of_array = None,
+      _union_of_records = Some(avro2s.test.unions.Record1(field1 = "a")),
+      _union_of_enum = Some(avro2s.test.unions.Enum1.sym2),
+      _union_of_fixed = Some(0x6f),
+      _union_of_string = Some("a"),
       _union_of_int = 1,
       _union_of_long = 1L,
       _union_of_float = 1.0f,
@@ -44,8 +44,8 @@ class SerializationTest extends AnyFunSuite with Matchers {
       _optional_array_of_map = Option(List(Map("a" -> "b", "c" -> "d"), Map("e" -> "f", "g" -> "h"))),
       _optional_map_of_map = Option(Map("a" -> Map("b" -> "c", "d" -> "e"), "f" -> Map("g" -> "h", "i" -> "j"))),
       _optional_array_of_array = Option(List(List("a", "b", "c"), List("d", "e", "f"))),
-      _optional_map_of_union = Option(Map("a" -> null)),
-      _optional_array_of_union = Option(List(null)),
+      _optional_map_of_union = Option(Map("a" -> None)),
+      _optional_array_of_union = Option(List(None)),
     )
 
     deserialize[Unions](serialize(unions), unions.getSchema) shouldBe unions
@@ -107,13 +107,13 @@ class SerializationTest extends AnyFunSuite with Matchers {
       _map_of_maps = Map("a" -> Map("b" -> "c", "d" -> "e"), "f" -> Map("g" -> "h", "i" -> "j")),
       _map_of_union = Map("a" -> "b", "c" -> 1),
       _map_of_union_of_map_of_union = Map(
-        "a" -> "b",
-        "c" -> 1L,
-        "d" -> true,
-        "e" -> Map("f" -> Map("g" -> "h", "i" -> 1L, "j" -> true, "k" -> 1.0, "l" -> null))
+        "a" -> Some("b"),
+        "c" -> Some(1L),
+        "d" -> Some(true),
+        "e" -> Some(Map("f" -> Map("g" -> Some("h"), "i" -> Some(1L), "j" -> Some(true), "k" -> Some(1.0), "l" -> None)))
       ),
       _map_of_map_of_union = Map(
-        "a" -> Map("b" -> "c", "d" -> 1L, "e" -> true, "f" -> 1.0, "g" -> null),
+        "a" -> Map("b" -> Some("c"), "d" -> Some(1L), "e" -> Some(true), "f" -> Some(1.0), "g" -> None),
       ),
       _map_of_arrays_of_maps = Map(
         "a" -> List(Map("b" -> false), Map("c" -> true)),
@@ -138,9 +138,9 @@ class SerializationTest extends AnyFunSuite with Matchers {
         "b" -> MapRecord(a = "c"),
       ),
       _map_of_union_of_record = Map(
-        "a" -> MapRecord(a = "b"),
-        "b" -> 1,
-        "c" -> null,
+        "a" -> Some(MapRecord(a = "b")),
+        "b" -> Some(1),
+        "c" -> None,
       ),
       _map_of_bytes = Map(
         "a" -> Array[Byte](0x6f, 0x6e),
@@ -178,7 +178,7 @@ class SerializationTest extends AnyFunSuite with Matchers {
 
     deserialize[Arrays](serialize(arrays), arrays.getSchema) shouldBe arrays
   }
-  
+
   test("reserved can be serialized and deserialized") {
     val reserved = avro2s.test.reserved.ReservedScala3(
       `abstract` = null,
@@ -229,10 +229,11 @@ class SerializationTest extends AnyFunSuite with Matchers {
 
     deserialize[avro2s.test.reserved.ReservedScala3](serialize(reserved), reserved.getSchema) shouldBe reserved
   }
-  
+
   test("options with null as second type can be serialized and deserialized") {
     val optionsWithNullAsSecondType = avro2s.test.unions.OptionsWithNullAsSecondType(
       _simple = Some("a"),
+      _double = Some(3.14),
       _optional_array = Some(List(true, false, true)),
       _array_of_options = List(Some("a"), None),
       _map_of_options = Map("a" -> Some("b"), "c" -> None)

@@ -175,13 +175,13 @@ private[avro2s] object GetCaseGenerator {
     }
 
     union match {
-      case TypeUnionRepresentation(types) =>
-        printer.add({
-          types.map {
-            case t if t.getType != NULL => s"case x: ${schemaToScalaType(t)} => ${x(t)}"
-            case _ => s"case null => null.asInstanceOf[AnyRef]"
-          }
-        }.mkString("\n"))
+      case cr: TypeUnionRepresentation =>
+        if (cr.hasNull) {
+          printer.add(cr.noNulls.map(t => s"case Some(x: ${schemaToScalaType(t)}) => ${x(t)}"): _*)
+            .add("case None => null")
+        } else {
+          printer.add(cr.noNulls.map(t => s"case x: ${schemaToScalaType(t)} => ${x(t)}"): _*)
+        }
       case OptionRepresentation(schema) =>
         printer.add(
           s"""case None => null
